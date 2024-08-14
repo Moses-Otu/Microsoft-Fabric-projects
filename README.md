@@ -1,7 +1,31 @@
-I've embarked on a journey to build projects using Microsoft Fabric and other tools for an x amount of time.
+Microsoft Fabric Project
+Welcome to the Microsoft Fabric Project repository!
 
-This project involves web scraping Olympic data from the internet and replicating the Olympic medal table visualization found on the official ESPN website.
+About
+This repository is dedicated to projects and experiments conducted using Microsoft Fabric. The primary aim is to explore the capabilities of Microsoft Fabric, including data integration, analytics, and visualization.
 
-First task was to create a create a hashtag#Datalake in Fabric and run a spark notebook to extract the Olympic medal table
+Purpose
+I intend to use this repository to:
 
-NB: The python script has been my go-to template in extracting tables, I only just need to make few modifications per use case.
+Store and document projects completed with Microsoft Fabric.
+Showcase different use cases, such as data extraction, transformation, and visualization.
+Explore various features of Microsoft Fabric by building real-world projects.
+Current Projects
+Olympic Data Web Scraping: A project that involves web scraping Olympic datasets from BBC Sports and analyzing them using Microsoft Fabric.
+Country and Continent Flag Analysis: Includes datasets containing continent and country flags, which are used for further analysis and visualization.
+Getting Started
+To get started with the projects in this repository, follow these steps:
+
+Clone the repository:
+bash
+Copy code
+git clone https://github.com/yourusername/microsoft-fabric-project.git
+Explore the project folders for individual project details and instructions.
+Follow the setup instructions in each project folder to run the code locally.
+Tools and Technologies
+Microsoft Fabric
+Python
+Power BI
+Data Visualization Tools
+Contributing
+Contributions are welcome! If you have ideas, suggestions, or improvements, feel free to submit a pull request or open an issue.

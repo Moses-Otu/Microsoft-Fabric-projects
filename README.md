@@ -37,7 +37,7 @@ To get started with the projects in this repository, follow these steps:
 - **Power BI**
 - **Data Visualization Tools**
 
-## Contributing
+## Image
 
-Contributions are welcome! If you have ideas, suggestions, or improvements, feel free to submit a pull request or open an issue.
+![Project Image](path/to/your/image.png)
 

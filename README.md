@@ -37,7 +37,7 @@ To get started with the projects in this repository, follow these steps:
 - **Power BI**
 - **Data Visualization Tools**
 
-## Image
+## Report
 
-![Project Image](https://github.com/Moses-Otu/Microsoft-Fabric-projects/commit/73d59d8250db8337b36d00b2b45f02a8d2b3e347#diff-cc4e926327092ec311c3eb6cb0caf18cc6882efd29b051b331bbcb48c47dab02)
+![Project Image](model.PNG)
 

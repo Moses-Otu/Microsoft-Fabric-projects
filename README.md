@@ -16,6 +16,8 @@ I intend to use this repository to:
 
 ## Current Projects
 
+- [AI layer on a Fabric data stack](fabric-ai-layer/README.md) - gold data, policy vector search in Eventhouse, and a Fabric data agent. Includes a [LinkedIn carousel](fabric-ai-layer/Fabric_AI_Layer_LinkedIn_Carousel.pdf).
+
 1. **Olympic Data Web Scraping**: A project that involves web scraping Olympic datasets from BBC Sports and analyzing them using Microsoft Fabric.
 2. **Country and Continent Flag Analysis**: Includes datasets containing continent and country flags, which are used for further analysis and visualization.
 

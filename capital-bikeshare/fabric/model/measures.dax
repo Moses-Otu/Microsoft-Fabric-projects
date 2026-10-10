@@ -1,0 +1,314 @@
+// Capital Bikeshare semantic model: every measure, as built by notebook 02.
+// Generated from spec.py. Change measures there (or in notebook 02), not here.
+// Paste into Power BI's DAX query view to inspect or test the measures; 'Update model' adds them to a model.
+
+DEFINE
+
+
+// ---- Trips -------------------------------------------------------
+
+// Number of trips in the trip records, counted at the start station.
+MEASURE fact_trips[Trips] =
+    COUNTROWS ( fact_trips )
+// [home table: fact_trips, format: #,0]
+
+// Trips counted at the end station. Use with station fields to see arrivals.
+MEASURE fact_trips[Trips Ended] =
+    CALCULATE ( [Trips], USERELATIONSHIP ( fact_trips[end_station_key], dim_station[station_key] ) )
+// [home table: fact_trips, format: #,0]
+
+// Trips by registered members.
+MEASURE fact_trips[Member Trips] =
+    CALCULATE ( [Trips], KEEPFILTERS ( dim_member_type[member_type] = "Member" ) )
+// [home table: fact_trips, format: #,0]
+
+// Trips by casual riders.
+MEASURE fact_trips[Casual Trips] =
+    CALCULATE ( [Trips], KEEPFILTERS ( dim_member_type[member_type] = "Casual" ) )
+// [home table: fact_trips, format: #,0]
+
+// Share of trips taken by registered members.
+MEASURE fact_trips[Member Share] =
+    DIVIDE ( [Member Trips], [Trips] )
+// [home table: fact_trips, format: 0.0%]
+
+// Trips that ended where they started.
+MEASURE fact_trips[Round Trips] =
+    CALCULATE ( [Trips], KEEPFILTERS ( fact_trips[is_round_trip] = TRUE () ) )
+// [home table: fact_trips, format: #,0]
+
+// Average trip length in minutes.
+MEASURE fact_trips[Average Trip Minutes] =
+    AVERAGE ( fact_trips[duration_min] )
+// [home table: fact_trips, format: 0.0]
+
+// Middle trip length in minutes; less affected by very long trips.
+MEASURE fact_trips[Median Trip Minutes] =
+    MEDIAN ( fact_trips[duration_min] )
+// [home table: fact_trips, format: 0.0]
+
+// Stations where at least one trip started.
+MEASURE fact_trips[Active Stations] =
+    DISTINCTCOUNT ( fact_trips[start_station_key] )
+// [home table: fact_trips, format: #,0]
+
+// Average trips per day that had trips.
+MEASURE fact_trips[Trips per Day] =
+    DIVIDE ( [Trips], DISTINCTCOUNT ( fact_trips[start_date] ) )
+// [home table: fact_trips, format: #,0]
+
+
+// ---- Trips / Downtown ----------------------------------------------
+
+// Trips that started at a downtown station.
+MEASURE fact_trips[Downtown Departures] =
+    CALCULATE ( [Trips], KEEPFILTERS ( dim_station[is_downtown] = TRUE () ) )
+// [home table: fact_trips, format: #,0]
+
+// Trips that ended at a downtown station.
+MEASURE fact_trips[Downtown Arrivals] =
+    CALCULATE ( [Trips], USERELATIONSHIP ( fact_trips[end_station_key], dim_station[station_key] ), KEEPFILTERS ( dim_station[is_downtown] = TRUE () ) )
+// [home table: fact_trips, format: #,0]
+
+// Arrivals minus departures downtown. Positive in the morning rush, negative in the evening.
+MEASURE fact_trips[Downtown Net Arrivals] =
+    [Downtown Arrivals] - [Downtown Departures]
+// [home table: fact_trips, format: #,0;-#,0]
+
+
+// ---- Data quality ------------------------------------------------
+
+// Trips starting at a station with no known position.
+MEASURE fact_trips[Trips at Unplaced Stations] =
+    CALCULATE ( [Trips], KEEPFILTERS ( dim_station[is_mapped] = FALSE () ) )
+// [home table: fact_trips, format: #,0]
+
+
+// ---- Rentals -----------------------------------------------------
+
+// All rentals in the UCI daily totals.
+MEASURE fact_daily_rentals[Rentals] =
+    SUM ( fact_daily_rentals[total] )
+// [home table: fact_daily_rentals, format: #,0]
+
+// Rentals by registered members.
+MEASURE fact_daily_rentals[Registered Rentals] =
+    SUM ( fact_daily_rentals[registered] )
+// [home table: fact_daily_rentals, format: #,0]
+
+// Rentals by casual riders.
+MEASURE fact_daily_rentals[Casual Rentals] =
+    SUM ( fact_daily_rentals[casual] )
+// [home table: fact_daily_rentals, format: #,0]
+
+// Share of rentals by registered members.
+MEASURE fact_daily_rentals[Registered Share] =
+    DIVIDE ( [Registered Rentals], [Rentals] )
+// [home table: fact_daily_rentals, format: 0.0%]
+
+// Number of days in the current selection.
+MEASURE fact_daily_rentals[Days] =
+    COUNTROWS ( fact_daily_rentals )
+// [home table: fact_daily_rentals, format: #,0]
+
+// Average rentals per day.
+MEASURE fact_daily_rentals[Avg Daily Rentals] =
+    DIVIDE ( [Rentals], [Days] )
+// [home table: fact_daily_rentals, format: #,0]
+
+
+// ---- Rentals / Rider slicer ----------------------------------------
+
+// Rentals for the rider type picked on a dim_member_type slicer (all riders when none or several are picked).
+MEASURE fact_daily_rentals[Selected Rider Rentals] =
+    SWITCH ( SELECTEDVALUE ( dim_member_type[member_type] ), "Member", [Registered Rentals], "Casual", [Casual Rentals], [Rentals] )
+// [home table: fact_daily_rentals, format: #,0]
+
+// Average rentals per day for the picked rider type.
+MEASURE fact_daily_rentals[Selected Rider Avg Daily] =
+    DIVIDE ( [Selected Rider Rentals], [Days] )
+// [home table: fact_daily_rentals, format: #,0]
+
+
+// ---- Rentals / Year on year ----------------------------------------
+
+// The same measure on the same dates a year earlier.
+MEASURE fact_daily_rentals[Selected Rider Avg Daily LY] =
+    CALCULATE ( [Selected Rider Avg Daily], SAMEPERIODLASTYEAR ( dim_date[date] ) )
+// [home table: fact_daily_rentals, format: #,0]
+
+// Change in rentals per day against the same dates in 2011. Only shown when the selection is within 2012, so it never compares against partial data.
+MEASURE fact_daily_rentals[Selected Rider YoY %] =
+    VAR firstDay = MIN ( fact_daily_rentals[date] )
+    VAR cur = [Selected Rider Avg Daily]
+    VAR ly = [Selected Rider Avg Daily LY]
+    RETURN
+        IF ( firstDay >= DATE ( 2012, 1, 1 ) && NOT ISBLANK ( ly ), DIVIDE ( cur - ly, ly ) )
+// [home table: fact_daily_rentals, format: +0.0%;-0.0%;0.0%]
+
+
+// ---- Rentals / Extremes --------------------------------------------
+
+// Day with the most rentals in the selection.
+MEASURE fact_daily_rentals[Busiest Day] =
+    VAR t = FILTER ( ADDCOLUMNS ( VALUES ( dim_date[date] ), "@r", [Selected Rider Rentals] ), NOT ISBLANK ( [@r] ) )
+    RETURN MAXX ( TOPN ( 1, t, [@r], DESC ), dim_date[date] )
+// [home table: fact_daily_rentals, format: d mmm yyyy]
+
+// Rentals on the busiest day.
+MEASURE fact_daily_rentals[Busiest Day Rentals] =
+    VAR t = FILTER ( ADDCOLUMNS ( VALUES ( dim_date[date] ), "@r", [Selected Rider Rentals] ), NOT ISBLANK ( [@r] ) )
+    RETURN MAXX ( t, [@r] )
+// [home table: fact_daily_rentals, format: #,0]
+
+// Day with the fewest rentals in the selection.
+MEASURE fact_daily_rentals[Quietest Day] =
+    VAR t = FILTER ( ADDCOLUMNS ( VALUES ( dim_date[date] ), "@r", [Selected Rider Rentals] ), NOT ISBLANK ( [@r] ) )
+    RETURN MAXX ( TOPN ( 1, t, [@r], ASC ), dim_date[date] )
+// [home table: fact_daily_rentals, format: d mmm yyyy]
+
+// Rentals on the quietest day.
+MEASURE fact_daily_rentals[Quietest Day Rentals] =
+    VAR t = FILTER ( ADDCOLUMNS ( VALUES ( dim_date[date] ), "@r", [Selected Rider Rentals] ), NOT ISBLANK ( [@r] ) )
+    RETURN MINX ( t, [@r] )
+// [home table: fact_daily_rentals, format: #,0]
+
+
+// ---- Rentals / Weather ---------------------------------------------
+
+// Average rentals per day on clear days.
+MEASURE fact_daily_rentals[Avg Daily Rentals Clear] =
+    CALCULATE ( [Selected Rider Avg Daily], KEEPFILTERS ( dim_date[weather_group] = "Clear" ) )
+// [home table: fact_daily_rentals, format: #,0]
+
+// Average rentals per day on days with rain or snow.
+MEASURE fact_daily_rentals[Avg Daily Rentals Rain or Snow] =
+    CALCULATE ( [Selected Rider Avg Daily], KEEPFILTERS ( dim_date[weather_group] = "Rain or snow" ) )
+// [home table: fact_daily_rentals, format: #,0]
+
+// How much lower rentals are on rain or snow days than on clear days.
+MEASURE fact_daily_rentals[Rain or Snow Drop %] =
+    DIVIDE ( [Avg Daily Rentals Clear] - [Avg Daily Rentals Rain or Snow], [Avg Daily Rentals Clear] )
+// [home table: fact_daily_rentals, format: 0.0%]
+
+
+// ---- Hourly ------------------------------------------------------
+
+// Rentals in the hourly totals, for the picked rider type.
+MEASURE fact_hourly_rentals[Hourly Rentals] =
+    SWITCH ( SELECTEDVALUE ( dim_member_type[member_type] ), "Member", SUM ( fact_hourly_rentals[registered] ), "Casual", SUM ( fact_hourly_rentals[casual] ), SUM ( fact_hourly_rentals[total] ) )
+// [home table: fact_hourly_rentals, format: #,0]
+
+// Average rentals in each hour across the days selected. Put dim_hour on the axis.
+MEASURE fact_hourly_rentals[Avg Rentals per Hour] =
+    DIVIDE ( [Hourly Rentals], CALCULATE ( DISTINCTCOUNT ( fact_hourly_rentals[date] ), REMOVEFILTERS ( dim_hour ) ) )
+// [home table: fact_hourly_rentals, format: #,0]
+
+// Busiest hour between 6am and 10am.
+MEASURE fact_hourly_rentals[Morning Peak Hour] =
+    VAR t = ADDCOLUMNS ( FILTER ( ALL ( dim_hour[hour] ), dim_hour[hour] >= 6 && dim_hour[hour] <= 9 ), "@r", [Avg Rentals per Hour] )
+    VAR h = MAXX ( TOPN ( 1, t, [@r], DESC ), dim_hour[hour] )
+    RETURN CALCULATE ( MAX ( dim_hour[hour_label] ), REMOVEFILTERS ( dim_hour ), dim_hour[hour] = h )
+// [home table: fact_hourly_rentals]
+
+// Average rentals in the morning peak hour.
+MEASURE fact_hourly_rentals[Morning Peak Rentals] =
+    VAR t = ADDCOLUMNS ( FILTER ( ALL ( dim_hour[hour] ), dim_hour[hour] >= 6 && dim_hour[hour] <= 9 ), "@r", [Avg Rentals per Hour] )
+    RETURN MAXX ( t, [@r] )
+// [home table: fact_hourly_rentals, format: #,0]
+
+// Busiest hour between 3pm and 8pm.
+MEASURE fact_hourly_rentals[Evening Peak Hour] =
+    VAR t = ADDCOLUMNS ( FILTER ( ALL ( dim_hour[hour] ), dim_hour[hour] >= 15 && dim_hour[hour] <= 19 ), "@r", [Avg Rentals per Hour] )
+    VAR h = MAXX ( TOPN ( 1, t, [@r], DESC ), dim_hour[hour] )
+    RETURN CALCULATE ( MAX ( dim_hour[hour_label] ), REMOVEFILTERS ( dim_hour ), dim_hour[hour] = h )
+// [home table: fact_hourly_rentals]
+
+// Average rentals in the evening peak hour.
+MEASURE fact_hourly_rentals[Evening Peak Rentals] =
+    VAR t = ADDCOLUMNS ( FILTER ( ALL ( dim_hour[hour] ), dim_hour[hour] >= 15 && dim_hour[hour] <= 19 ), "@r", [Avg Rentals per Hour] )
+    RETURN MAXX ( t, [@r] )
+// [home table: fact_hourly_rentals, format: #,0]
+
+// Busiest hour of the day.
+MEASURE fact_hourly_rentals[Peak Hour] =
+    VAR t = ADDCOLUMNS ( ALL ( dim_hour[hour] ), "@r", [Avg Rentals per Hour] )
+    VAR h = MAXX ( TOPN ( 1, t, [@r], DESC ), dim_hour[hour] )
+    RETURN CALCULATE ( MAX ( dim_hour[hour_label] ), REMOVEFILTERS ( dim_hour ), dim_hour[hour] = h )
+// [home table: fact_hourly_rentals]
+
+// Average rentals in the busiest hour.
+MEASURE fact_hourly_rentals[Peak Hour Rentals] =
+    VAR t = ADDCOLUMNS ( ALL ( dim_hour[hour] ), "@r", [Avg Rentals per Hour] )
+    RETURN MAXX ( t, [@r] )
+// [home table: fact_hourly_rentals, format: #,0]
+
+// Average rentals per hour from 10am to 3pm, used to tell a commuting pattern from a leisure one.
+MEASURE fact_hourly_rentals[Midday Average Rentals] =
+    AVERAGEX ( FILTER ( ALL ( dim_hour[hour] ), dim_hour[hour] >= 10 && dim_hour[hour] <= 14 ), [Avg Rentals per Hour] )
+// [home table: fact_hourly_rentals, format: #,0]
+
+
+// ---- Narrative ---------------------------------------------------
+
+// Opening sentence of the report. It rewrites itself for whatever is selected.
+MEASURE fact_daily_rentals[Summary Text] =
+    VAR n = [Days]
+    VAR d0 = MIN ( fact_daily_rentals[date] )
+    VAR d1 = MAX ( fact_daily_rentals[date] )
+    VAR who = SWITCH ( SELECTEDVALUE ( dim_member_type[member_type] ), "Member", "registered members", "Casual", "casual riders", "riders" )
+    VAR yoy = [Selected Rider YoY %]
+    VAR main =
+        IF ( n = 1,
+            "On " & FORMAT ( d0, "dddd d mmmm yyyy" ) & ", " & who & " took " & FORMAT ( [Selected Rider Rentals], "#,0" ) & " trips.",
+            "From " & FORMAT ( d0, "d mmm yyyy" ) & " to " & FORMAT ( d1, "d mmm yyyy" ) & ", " & who & " took " & FORMAT ( [Selected Rider Rentals], "#,0" )
+                & " trips, an average of " & FORMAT ( [Selected Rider Avg Daily], "#,0" ) & " a day across " & FORMAT ( n, "#,0" ) & " days." )
+    VAR share = IF ( ISBLANK ( SELECTEDVALUE ( dim_member_type[member_type] ) ), " Registered members made " & FORMAT ( [Registered Share], "0.0%" ) & " of them." )
+    VAR change = IF ( NOT ISBLANK ( yoy ), " Per day, that is " & IF ( yoy >= 0, "up ", "down " ) & FORMAT ( ABS ( yoy ), "0.0%" ) & " on the same dates in 2011." )
+    RETURN IF ( ISBLANK ( n ), "No days match these filters.", main & share & change )
+// [home table: fact_daily_rentals]
+
+// The busiest and quietest days in the selection.
+MEASURE fact_daily_rentals[Extremes Text] =
+    IF ( [Days] > 1,
+        "The busiest day was " & FORMAT ( [Busiest Day], "dddd d mmmm yyyy" ) & ", with " & FORMAT ( [Busiest Day Rentals], "#,0" ) & " trips. The quietest was "
+            & FORMAT ( [Quietest Day], "dddd d mmmm yyyy" ) & ", with " & FORMAT ( [Quietest Day Rentals], "#,0" )
+            & IF ( [Quietest Day] = DATE ( 2012, 10, 29 ), ", the day Hurricane Sandy reached Washington.", "." ) )
+// [home table: fact_daily_rentals]
+
+// Describes the daily rhythm: commuting (two peaks) or leisure (one afternoon peak).
+MEASURE fact_hourly_rentals[Rush Hour Text] =
+    VAR am = [Morning Peak Rentals]
+    VAR pm = [Evening Peak Rentals]
+    VAR mid = [Midday Average Rentals]
+    RETURN
+        SWITCH ( TRUE (),
+            ISBLANK ( [Peak Hour Rentals] ) || [Peak Hour Rentals] < 3, "There are too few trips in this selection to show a clear daily rhythm.",
+            am > mid * 1.4 && pm > mid * 1.2,
+                "Riding has two rush hours: a morning peak at " & [Morning Peak Hour] & " with " & FORMAT ( am, "#,0" ) & " trips in the hour, and an evening peak at "
+                    & [Evening Peak Hour] & " with " & FORMAT ( pm, "#,0" ) & ". That is the shape of commuting.",
+            "There is no real rush hour here. Riding peaks at " & [Peak Hour] & ", with " & FORMAT ( [Peak Hour Rentals], "#,0" ) & " trips in the hour. That is the shape of leisure riding." )
+// [home table: fact_hourly_rentals]
+
+// Compares clear days with rain or snow days, when the selection has both.
+MEASURE fact_daily_rentals[Weather Text] =
+    VAR c = [Avg Daily Rentals Clear]
+    VAR w = [Avg Daily Rentals Rain or Snow]
+    RETURN
+        IF ( NOT ISBLANK ( c ) && NOT ISBLANK ( w ),
+            "Weather makes a big difference. Clear days averaged " & FORMAT ( c, "#,0" ) & " trips, against " & FORMAT ( w, "#,0" )
+                & " on days with rain or snow, a drop of " & FORMAT ( [Rain or Snow Drop %], "0.0%" ) & "." )
+// [home table: fact_daily_rentals]
+
+EVALUATE
+ROW ( "Trips", [Trips], "Rentals", [Rentals], "Summary", [Summary Text] )
+
+// ---- Security roles ----------------------------------------
+
+// Role: All data (Read). Analysts and owners: no row filter.
+//   no filters
+
+// Role: Region viewers (Read). Sees trips only for stations in the regions listed against their sign-in in security_user_region. Bike numbers are hidden. City-wide UCI daily and hourly totals have no station, so they stay visible in full.
+//   row filter on dim_station: [region_name] IN CALCULATETABLE ( VALUES ( security_user_region[region_name] ), security_user_region[user_email] = LOWER ( USERPRINCIPALNAME () ) )
+//   row filter on security_user_region: [user_email] = LOWER ( USERPRINCIPALNAME () )
+//   column fact_trips[bike_number]: None

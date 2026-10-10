@@ -16,6 +16,7 @@ I intend to use this repository to:
 
 ## Current Projects
 
+- [Capital Bikeshare on Microsoft Fabric](capital-bikeshare/README.md) - a lakehouse, a governed Direct Lake semantic model with security roles, and an interactive dashboard built on it, for two years of Washington D.C. bike share data.
 - [AI layer on a Fabric data stack](fabric-ai-layer/README.md) - gold data, policy vector search in Eventhouse, and a Fabric data agent. Includes a [LinkedIn carousel](fabric-ai-layer/Fabric_AI_Layer_LinkedIn_Carousel.pdf).
 
 1. **Olympic Data Web Scraping**: A project that involves web scraping Olympic datasets from BBC Sports and analyzing them using Microsoft Fabric.

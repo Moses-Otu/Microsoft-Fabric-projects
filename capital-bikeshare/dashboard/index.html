@@ -1,0 +1,1059 @@
+<style>
+.bk { font-family: var(--font-anthropic-sans); color: var(--color-fg); display: flex; flex-direction: column; gap: var(--cds-gap-xl); }
+.bk-head h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; }
+.bk-take { color: var(--color-fg-muted); font-size: var(--cds-font-size-body); margin: var(--cds-gap-sm) 0 0; max-width: 62rem; line-height: 1.5; }
+.bk .bk-take b, .bk .bk-hero b { font-weight: 600; color: var(--color-fg); }
+.bk-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); gap: var(--cds-gap-md); }
+.bk-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); min-width: 0; position: relative; }
+.bk-kpi-label { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.bk-kpi-val { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; margin-top: var(--cds-gap-xs); min-height: 1.3em; }
+.bk-kpi-note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-top: var(--cds-gap-xs); font-variant-numeric: tabular-nums; }
+.bk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: var(--cds-gap-md); }
+.bk-card h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+.bk-note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: var(--cds-gap-xs) 0 var(--cds-gap-md); line-height: 1.45; }
+.bk-chart { min-height: 250px; position: relative; }
+.bk-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-bottom: var(--cds-gap-sm); }
+.bk-legend span { display: inline-flex; align-items: center; gap: var(--cds-gap-xs); }
+.bk-sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.bk-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); white-space: nowrap; z-index: 5; display: none; font-variant-numeric: tabular-nums; }
+.bk-tip .bk-tip-h { color: var(--cds-text-secondary); margin-bottom: 2px; }
+.bk-tip .bk-tip-row { display: flex; align-items: center; gap: 6px; }
+.bk-tick text { fill: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.bk-tick line, .bk-grid-line { stroke: var(--cds-chart-grid); }
+.bk-axis-line { stroke: var(--cds-chart-axis); }
+
+/* Hero: the bike road */
+.bk-hero { padding: 0; overflow: hidden; }
+.bk-hero-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: var(--cds-gap-md); padding: var(--cds-pad-lg) var(--cds-pad-lg) 0; }
+.bk-hero-top h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+.bk-controls { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); align-items: center; }
+.bk-seg { display: inline-flex; border: 1px solid var(--color-border-line); border-radius: 999px; overflow: hidden; }
+.bk-seg button, .bk-play { font: inherit; font-size: var(--cds-font-size-caption); background: transparent; color: var(--color-fg); border: 0; padding: 6px 14px; cursor: pointer; }
+.bk-seg button[aria-pressed="true"] { background: var(--color-fg); color: var(--color-bg); }
+.bk-play { border: 1px solid var(--color-border-line); border-radius: 999px; min-width: 5.5rem; }
+.bk-stage { position: relative; min-height: 300px; }
+.bk-stage svg { display: block; }
+.bk-overlay { position: absolute; left: var(--cds-pad-lg); top: var(--cds-pad-md); pointer-events: none; }
+.bk-when { font-family: var(--font-anthropic-serif); font-size: var(--cds-font-size-title); font-weight: 400; line-height: 1.1; }
+.bk-rides { font-family: var(--font-anthropic-serif); font-size: calc(var(--cds-font-size-title) * 1.35); font-weight: 400; font-variant-numeric: tabular-nums; line-height: 1.1; margin-top: 2px; }
+.bk-rides-l { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.bk-split { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-top: var(--cds-gap-xs); font-variant-numeric: tabular-nums; }
+.bk-wx { position: absolute; right: var(--cds-pad-lg); top: var(--cds-pad-md); text-align: right; pointer-events: none; }
+.bk-wx-icon { font-size: 2.2rem; line-height: 1; }
+.bk-wx-t { font-family: var(--font-anthropic-serif); font-size: var(--cds-font-size-heading); font-variant-numeric: tabular-nums; }
+.bk-wx-l { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.bk-timeline { padding: var(--cds-pad-sm) var(--cds-pad-lg) var(--cds-pad-lg); }
+.bk-timeline svg { display: block; cursor: pointer; }
+.bk-scale { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--cds-gap-sm); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-top: var(--cds-gap-xs); }
+.bk-range { width: 100%; accent-color: var(--color-fg); margin: var(--cds-gap-xs) 0 0; }
+.bk-cap { position: absolute; left: 50%; top: 38%; transform: translate(-50%, -50%) translateY(8px); max-width: min(26rem, calc(100% - 2 * var(--cds-pad-lg))); background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-sm) var(--cds-pad-md); pointer-events: none; opacity: 0; transition: opacity var(--cds-dur-slow) var(--cds-ease-out), transform var(--cds-dur-slow) var(--cds-ease-out); z-index: 3; }
+.bk-cap.on { opacity: 1; transform: translate(-50%, -50%); }
+.bk-cap-t { font-family: var(--font-anthropic-serif); font-size: var(--cds-font-size-heading); line-height: 1.2; }
+.bk-cap-b { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-top: 2px; font-variant-numeric: tabular-nums; line-height: 1.4; }
+.bk-cap-b b { font-weight: 600; color: var(--color-fg); }
+.bk-ann { fill: var(--color-fg); font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+.bk-ann-m { fill: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+@media (max-width: 520px) { .bk-cap { top: 30%; } }
+.bk-tabs { display: flex; gap: var(--cds-gap-xs); border-bottom: 1px solid var(--color-border-line); margin-top: calc(-1 * var(--cds-gap-md)); }
+.bk-tab { font: inherit; font-size: var(--cds-font-size-body); background: transparent; border: 0; border-bottom: 2px solid transparent; color: var(--color-fg-muted); padding: var(--cds-pad-sm) var(--cds-pad-md); cursor: pointer; margin-bottom: -1px; }
+.bk-tab[aria-selected="true"] { color: var(--color-fg); border-bottom-color: var(--color-fg); }
+.bk-page { display: flex; flex-direction: column; gap: var(--cds-gap-xl); }
+.bk-page[hidden] { display: none; }
+.bk-mhead { padding: var(--cds-pad-md) var(--cds-pad-lg) 0; }
+.bk-mhead-n { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--cds-gap-sm); }
+.bk-mstage { position: relative; padding: 0 var(--cds-pad-sm); }
+.bk-m-map { min-height: 380px; position: relative; }
+.bk-m-cap { top: auto; bottom: var(--cds-pad-md); transform: translate(-50%, 8px); }
+.bk-m-cap.on { transform: translate(-50%, 0); }
+.bk-tbox { max-height: 26rem; overflow: auto; }
+.bk-table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+.bk-table th { position: sticky; top: 0; background: var(--color-panel); text-align: left; font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); }
+.bk-table td { padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); }
+.bk-table th:not(:first-child), .bk-table td:not(:first-child) { text-align: right; white-space: nowrap; }
+.bk-mfoot { max-width: 62rem; margin: 0; }
+.bk-mtools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cds-gap-sm); padding: var(--cds-pad-sm) var(--cds-pad-lg) 0; }
+.bk-m-find { font: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg); background: var(--color-bg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: 5px 8px; max-width: 100%; }
+.bk-mhint { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); flex: 1 1 14rem; }
+.bk-zoom { display: inline-flex; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); overflow: hidden; }
+.bk-zoom button { font: inherit; background: transparent; color: var(--color-fg); border: 0; width: 30px; height: 28px; cursor: pointer; }
+.bk-zoom button + button { border-left: 1px solid var(--color-border-line); }
+.bk-ann-sel { font-weight: 600; }
+.bk-m-panel { position: absolute; top: var(--cds-pad-sm); right: var(--cds-pad-sm); width: min(21rem, calc(100% - 2 * var(--cds-pad-sm))); max-height: calc(100% - 2 * var(--cds-pad-sm)); overflow: auto; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-md); z-index: 4; opacity: 0; transform: translateX(16px); pointer-events: none; transition: opacity var(--cds-dur-slow) var(--cds-ease-out), transform var(--cds-dur-slow) var(--cds-ease-out); }
+.bk-m-panel.on { opacity: 1; transform: none; pointer-events: auto; }
+.bk-p-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--cds-gap-sm); }
+.bk-p-name { font-family: var(--font-anthropic-serif); font-size: var(--cds-font-size-heading); line-height: 1.2; }
+.bk-p-close { font: inherit; font-size: 1.2rem; line-height: 1; background: transparent; border: 0; color: var(--color-fg-muted); cursor: pointer; padding: 2px 6px; }
+.bk-p-sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-top: 2px; }
+.bk-p-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--cds-gap-sm); margin: var(--cds-gap-md) 0; }
+.bk-p-big { font-family: var(--font-anthropic-serif); font-size: var(--cds-font-size-heading); font-variant-numeric: tabular-nums; }
+.bk-p-h { font-size: var(--cds-font-size-caption); font-weight: var(--cds-font-weight-medium); margin: var(--cds-gap-sm) 0 var(--cds-gap-xs); display: flex; align-items: center; flex-wrap: wrap; }
+.bk-p-cols { display: grid; grid-template-columns: 1fr 1fr; gap: var(--cds-gap-md); }
+.bk-p-cols ol { margin: 0; padding-left: 1.1rem; font-size: var(--cds-font-size-caption); }
+.bk-p-cols li { margin-bottom: 4px; }
+.bk-p-link { font: inherit; background: none; border: 0; padding: 0; color: var(--color-fg); text-decoration: underline; text-decoration-color: var(--color-border-line); cursor: pointer; text-align: left; }
+.bk-p-n { color: var(--color-fg-muted); font-variant-numeric: tabular-nums; margin-left: 4px; }
+@media (max-width: 640px) { .bk-m-panel { position: static; width: auto; max-height: none; margin: 0 var(--cds-pad-sm) var(--cds-pad-sm); display: none; } .bk-m-panel.on { display: block; } }
+.rp-filters { display: flex; flex-direction: column; gap: var(--cds-gap-sm); position: sticky; top: 0; z-index: 6; padding: var(--cds-pad-md) var(--cds-pad-lg); }
+.rp-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cds-gap-sm); }
+.rp-lab { display: inline-flex; align-items: center; gap: 6px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.rp-lab input { font: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg); background: var(--color-bg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: 4px 6px; }
+.rp-presets { display: flex; flex-wrap: wrap; gap: 4px; }
+.rp-preset { font: inherit; font-size: var(--cds-font-size-caption); background: transparent; color: var(--color-fg); border: 1px solid var(--color-border-line); border-radius: 999px; padding: 4px 10px; cursor: pointer; }
+.rp-preset[aria-pressed="true"] { background: var(--color-fg); color: var(--color-bg); border-color: var(--color-fg); }
+.rp-doc { max-width: 46rem; width: 100%; margin-inline: auto; }
+.rp-kicker { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); text-transform: uppercase; letter-spacing: .08em; margin: 0; }
+.rp-title { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: calc(var(--cds-font-size-title) * 1.15); line-height: 1.15; margin: var(--cds-gap-xs) 0; }
+.rp-scope { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0 0 var(--cds-gap-lg); padding-bottom: var(--cds-pad-md); border-bottom: 1px solid var(--color-border-line); }
+.rp-doc h3 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-heading); margin: var(--cds-gap-xl) 0 var(--cds-gap-sm); }
+.rp-p, .rp-method p, .rp-empty { font-size: var(--cds-font-size-body); line-height: 1.7; margin: 0 0 var(--cds-gap-md); }
+.rp-doc .rp-p b { font-weight: 600; font-variant-numeric: tabular-nums; }
+#rp-summary .rp-p:first-child { font-size: calc(var(--cds-font-size-body) * 1.12); }
+.rp-doc figure { margin: var(--cds-gap-md) 0 0; }
+.rp-chart { min-height: 120px; }
+.rp-doc figcaption { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-top: var(--cds-gap-xs); }
+.rp-go { font: inherit; background: none; border: 0; padding: 0; color: var(--color-fg); text-decoration: underline; cursor: pointer; margin-left: 4px; }
+.rp-method { margin-top: var(--cds-gap-xl); padding-top: var(--cds-pad-md); border-top: 1px solid var(--color-border-line); }
+.rp-method p { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.rp-st td:first-child, .rp-st th:first-child { width: 2rem; color: var(--color-fg-muted); }
+.rp-st th:nth-child(2), .rp-st td:nth-child(2) { text-align: left !important; white-space: normal !important; }
+[data-dash-source-state=empty] { color: transparent; }
+[data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+.bk-fail { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 250px; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.bk-fail i { width: .375rem; height: .375rem; border-radius: 50%; background: var(--color-bad); display: inline-block; }
+@media (max-width: 520px) { .bk-wx { top: auto; bottom: 46%; } .bk-overlay { max-width: 60%; } }
+</style>
+
+<div class="bk">
+  <header class="bk-head" id="top">
+    <h1>Capital Bikeshare, 2011–2012</h1>
+    <p class="bk-take">
+      Riders took <b class="dash-skeleton" data-source="kpi" data-field="total" data-row="0">—</b> trips over two years, and
+      2012 beat 2011 by <b class="dash-skeleton" data-source="kpi" data-field="growth" data-row="0">—</b>.
+      Warm, dry days and weekday commutes drive demand; cold, wet days cut it sharply.
+    </p>
+  </header>
+
+  <nav class="bk-tabs" role="tablist" aria-label="Pages">
+    <button type="button" role="tab" class="bk-tab" data-page="report" aria-selected="true">Report</button>
+    <button type="button" role="tab" class="bk-tab" data-page="overview" aria-selected="false">Overview</button>
+    <button type="button" role="tab" class="bk-tab" data-page="map" aria-selected="false">Map</button>
+  </nav>
+
+  <div class="bk-page" id="report">
+    <section class="bk-card rp-filters" id="report-filters" aria-label="Report filters">
+      <div class="rp-row">
+        <label class="rp-lab">From <input class="rp-start" type="date" min="2011-01-01" max="2012-12-31"></label>
+        <label class="rp-lab">To <input class="rp-end" type="date" min="2011-01-01" max="2012-12-31"></label>
+        <div class="rp-presets">
+          <button type="button" class="rp-preset" data-s="2011-01-01" data-e="2012-12-31">Both years</button>
+          <button type="button" class="rp-preset" data-s="2011-01-01" data-e="2011-12-31">2011</button>
+          <button type="button" class="rp-preset" data-s="2012-01-01" data-e="2012-12-31">2012</button>
+          <button type="button" class="rp-preset" data-s="2011-06-01" data-e="2011-08-31">Summer 2011</button>
+          <button type="button" class="rp-preset" data-s="2012-06-01" data-e="2012-08-31">Summer 2012</button>
+          <button type="button" class="rp-preset" data-s="2011-12-01" data-e="2012-02-29">Winter 2011–12</button>
+          <button type="button" class="rp-preset" data-s="2012-10-01" data-e="2012-12-31">Last quarter</button>
+        </div>
+      </div>
+      <div class="rp-row">
+        <div class="bk-seg rp-seg" data-p="daytype" role="group" aria-label="Day type">
+          <button type="button" data-v="all">All days</button><button type="button" data-v="working">Working days</button><button type="button" data-v="weekend">Weekends &amp; holidays</button>
+        </div>
+        <div class="bk-seg rp-seg" data-p="riders" role="group" aria-label="Riders">
+          <button type="button" data-v="all">Everyone</button><button type="button" data-v="registered">Members</button><button type="button" data-v="casual">Casual</button>
+        </div>
+        <div class="bk-seg rp-seg" data-p="weather" role="group" aria-label="Weather">
+          <button type="button" data-v="all">Any weather</button><button type="button" data-v="clear">Clear</button><button type="button" data-v="mist">Mist or cloud</button><button type="button" data-v="wet">Rain or snow</button>
+        </div>
+        <button type="button" class="bk-play rp-reset">Reset</button>
+      </div>
+    </section>
+
+    <article class="rp-doc">
+      <p class="rp-kicker">Report</p>
+      <h2 class="rp-title">How Washington rode Capital Bikeshare</h2>
+      <p class="rp-scope">—</p>
+      <div class="rp-body">
+        <section id="rp-summary"><div class="rp-text"><p class="rp-p dash-skeleton">—</p></div></section>
+        <section id="rp-trend"><h3>Demand over time</h3><div class="rp-text"></div>
+          <figure><div class="rp-chart" data-source="day"></div><figcaption>Trips each day in grey, with the 7-day average in blue.</figcaption></figure></section>
+        <section id="rp-when"><h3>When people ride</h3><div class="rp-text"></div>
+          <figure><div class="rp-chart" data-source="hour"></div><figcaption>Average trips in each hour of the day, with the peaks in blue. <button type="button" class="rp-go" data-goto="overview">Watch it on the bike road</button></figcaption></figure></section>
+        <section id="rp-weather"><h3>Weather</h3><div class="rp-text"></div>
+          <figure><div class="rp-chart" data-source="day"></div><figcaption>Average trips a day by weather type.</figcaption></figure></section>
+        <section id="rp-where"><h3>Where people ride</h3><div class="rp-text"></div>
+          <figure><div class="bk-tbox" data-source="map_station_month map_stations"><table class="bk-table rp-st"><thead><tr><th>#</th><th>Station</th><th>Trips started</th></tr></thead><tbody></tbody></table></div>
+          <figcaption>The five busiest stations in the selected months. <button type="button" class="rp-go" data-goto="map">Explore every station on the map</button></figcaption></figure></section>
+        <section class="rp-method"><h3>About this report</h3>
+          <p>The figures are worked out on the page, from the daily and hourly rental files, for whatever filters you choose, so every sentence and chart changes with them. Weather and temperature come with the daily file. Station figures come from Capital Bikeshare's public trip records and count every trip in the selected months. Year-on-year comparisons appear when the dates fall in 2012, against the same dates in 2011.</p></section>
+      </div>
+    </article>
+  </div>
+
+  <div class="bk-page" id="overview" hidden>
+  <section class="bk-card bk-hero" id="bike-road">
+    <div class="bk-hero-top">
+      <div>
+        <h2>The bike road</h2>
+        <p class="bk-note" style="margin-bottom:0">Ride through the data. The more people rented bikes, the more bikes are on the road. One bike ≈ 200 rides a day. Blue riders are registered members, orange riders are casual. Dots on the timeline mark key moments; playback pauses on each one to tell the story.</p>
+      </div>
+      <div class="bk-controls">
+        <div class="bk-seg" role="group" aria-label="Step through">
+          <button type="button" data-mode="day" aria-pressed="true">Days</button>
+          <button type="button" data-mode="month" aria-pressed="false">Months</button>
+          <button type="button" data-mode="year" aria-pressed="false">Years</button>
+        </div>
+        <button type="button" class="bk-play">▶ Play</button>
+      </div>
+    </div>
+    <div class="bk-stage" data-source="days monthly yearly">
+      <div class="bk-overlay">
+        <div class="bk-when">—</div>
+        <div class="bk-rides dash-skeleton">—</div>
+        <div class="bk-rides-l">rides that day</div>
+        <div class="bk-split"><span class="bk-reg">—</span> registered · <span class="bk-cas">—</span> casual</div>
+      </div>
+      <div class="bk-cap" aria-live="polite"><div class="bk-cap-t"></div><div class="bk-cap-b"></div></div>
+      <div class="bk-wx">
+        <div class="bk-wx-icon" aria-hidden="true"></div>
+        <div class="bk-wx-t">—</div>
+        <div class="bk-wx-l"></div>
+      </div>
+    </div>
+    <div class="bk-timeline">
+      <div class="bk-tl"></div>
+      <input class="bk-range" type="range" min="0" max="0" value="0" aria-label="Position in time">
+      <div class="bk-scale"><span class="bk-tl-a"></span><span>Click the strip or drag to jump</span><span class="bk-tl-b"></span></div>
+    </div>
+  </section>
+
+  <section class="bk-kpis" id="headline">
+    <div class="bk-card"><div class="bk-kpi-label">Total rides, 2011–2012</div><div class="bk-kpi-val dash-skeleton" data-source="kpi" data-field="total" data-row="0">—</div><div class="bk-kpi-note">731 days of rentals</div></div>
+    <div class="bk-card"><div class="bk-kpi-label">Rides in 2012</div><div class="bk-kpi-val dash-skeleton" data-source="yearly" data-field="total" data-where="year=2012">—</div><div class="bk-kpi-note"><span style="color:var(--color-ok)" data-source="kpi" data-field="growth" data-row="0">—</span> vs 2011</div></div>
+    <div class="bk-card"><div class="bk-kpi-label">Registered members' share</div><div class="bk-kpi-val dash-skeleton" data-source="kpi" data-field="registered_share" data-row="0">—</div><div class="bk-kpi-note">the rest are casual riders</div></div>
+    <div class="bk-card"><div class="bk-kpi-label">Busiest day</div><div class="bk-kpi-val dash-skeleton" data-source="kpi" data-field="best_rides" data-row="0">—</div><div class="bk-kpi-note bk-best-d">—</div></div>
+    <div class="bk-card"><div class="bk-kpi-label">Quietest day</div><div class="bk-kpi-val dash-skeleton" data-source="kpi" data-field="worst_rides" data-row="0">—</div><div class="bk-kpi-note bk-worst-d">—</div></div>
+  </section>
+
+  <section class="bk-grid" id="charts">
+    <div class="bk-card" id="monthly-card">
+      <h2>Every month of 2012 beat 2011</h2>
+      <p class="bk-note">Average rides per day, by month.</p>
+      <div class="bk-legend"><span><i class="bk-sw" style="background:var(--cds-chart-muted)"></i>2011</span><span><i class="bk-sw bk-sw-a"></i>2012</span></div>
+      <div class="bk-chart bk-c-month dash-skeleton" data-source="monthly month_growth"></div>
+    </div>
+    <div class="bk-card" id="hourly-card">
+      <h2>Commuters make two rush hours</h2>
+      <p class="bk-note">Average rides per hour of the day. Working days peak at 8am and 5–6pm; weekends and holidays form one afternoon hump.</p>
+      <div class="bk-legend"><span><i class="bk-sw bk-sw-a"></i>Working day</span><span><i class="bk-sw bk-sw-b"></i>Weekend or holiday</span></div>
+      <div class="bk-chart bk-c-hour dash-skeleton" data-source="hourly"></div>
+    </div>
+    <div class="bk-card" id="temp-card">
+      <h2>Warmer days, more riders</h2>
+      <p class="bk-note">Each dot is one day: its temperature and its rides. Demand climbs until the high 20s °C, then eases off in the hottest heat.</p>
+      <div class="bk-legend"><span><i class="bk-sw" style="background:var(--cds-chart-muted)"></i>2011</span><span><i class="bk-sw bk-sw-a"></i>2012</span><span><i class="bk-sw" style="background:var(--color-fg);height:2px"></i>Average by 2°C band</span></div>
+      <div class="bk-chart bk-c-temp dash-skeleton" data-source="days temp_bands"></div>
+    </div>
+    <div class="bk-card" id="weekday-card">
+      <h2>Members ride weekdays, casual riders weekends</h2>
+      <p class="bk-note">Average rides per day, split by rider type.</p>
+      <div class="bk-legend"><span><i class="bk-sw bk-sw-a"></i>Registered</span><span><i class="bk-sw bk-sw-b"></i>Casual</span></div>
+      <div class="bk-chart bk-c-week dash-skeleton" data-source="weekday"></div>
+    </div>
+    <div class="bk-card" id="weather-card">
+      <h2>Rain and snow empty the roads</h2>
+      <p class="bk-note">Average rides per day by weather. The quietest day of all was Hurricane Sandy, 29 October 2012.</p>
+      <div class="bk-chart bk-c-wx dash-skeleton" data-source="weather" style="min-height:180px"></div>
+    </div>
+  </section>
+  </div>
+
+  <div class="bk-page" id="map" hidden></div>
+</div>
+
+<template id="bk-tpl-map">
+  <section class="bk-card bk-hero" id="map-card">
+    <div class="bk-hero-top">
+      <div>
+        <h2>Where people rode</h2>
+        <p class="bk-note" style="margin-bottom:0">Every station from the 2011–2012 trip records, at its real position. Blue glow shows how many trips start at each station; orange dots are riders on the busiest routes, drawn as curves between stations, not along streets. Dashed rings are closed stations placed at their named street corner. Every bubble is interactive.</p>
+      </div>
+      <div class="bk-controls">
+        <div class="bk-seg bk-mseg" role="group" aria-label="View">
+          <button type="button" data-mm="hour" aria-pressed="true">A working day</button>
+          <button type="button" data-mm="month" aria-pressed="false">Two years</button>
+        </div>
+        <button type="button" class="bk-play bk-mplay">▶ Play</button>
+      </div>
+    </div>
+    <div class="bk-mhead">
+      <div class="bk-when bk-m-when">—</div>
+      <div class="bk-mhead-n"><span class="bk-rides bk-m-n dash-skeleton">—</span> <span class="bk-rides-l bk-m-l"></span></div>
+      <div class="bk-split bk-m-st"></div>
+    </div>
+    <div class="bk-mtools">
+      <select class="bk-m-find" aria-label="Find a station"><option value="">Find a station…</option></select>
+      <span class="bk-mhint">Click a bubble for details · drag it to pull it out · drag the map to pan · Ctrl + scroll to zoom</span>
+      <span class="bk-zoom"><button type="button" class="bk-z-in" aria-label="Zoom in">+</button><button type="button" class="bk-z-out" aria-label="Zoom out">−</button><button type="button" class="bk-z-reset" aria-label="Reset view">⟲</button></span>
+    </div>
+    <div class="bk-mstage">
+      <aside class="bk-m-panel" aria-hidden="true" aria-label="Station details">
+        <div class="bk-p-head"><div class="bk-p-name">—</div><button type="button" class="bk-p-close" aria-label="Close">×</button></div>
+        <div class="bk-p-sub"></div>
+        <div class="bk-p-stats">
+          <div><div class="bk-kpi-label">Trips started</div><div class="bk-p-big bk-p-starts">—</div></div>
+          <div><div class="bk-kpi-label">Trips ended</div><div class="bk-p-big bk-p-ends">—</div></div>
+          <div><div class="bk-kpi-label">By members</div><div class="bk-p-big bk-p-mem">—</div></div>
+        </div>
+        <div class="bk-p-h">Working-day rhythm <span class="bk-legend" style="display:inline-flex;margin:0 0 0 6px"><span><i class="bk-sw bk-sw-b"></i>leaving</span><span><i class="bk-sw bk-sw-a"></i>arriving</span></span></div>
+        <div class="bk-p-hour" data-source="map_station_hour"></div>
+        <div class="bk-p-h">Trips started each month</div>
+        <div class="bk-p-month" data-source="map_station_month"></div>
+        <div class="bk-p-cols">
+          <div><div class="bk-p-h">Riders go to</div><ol class="bk-p-out"></ol></div>
+          <div><div class="bk-p-h">Riders come from</div><ol class="bk-p-in"></ol></div>
+        </div>
+      </aside>
+      <div class="bk-m-map dash-skeleton" data-source="map_stations map_station_hour map_station_month map_route_hour map_route_month map_routes"></div>
+      <div class="bk-cap bk-m-cap" aria-live="polite"><div class="bk-cap-t"></div><div class="bk-cap-b"></div></div>
+    </div>
+    <div class="bk-timeline">
+      <div class="bk-m-tl"></div>
+      <input class="bk-range bk-m-range" type="range" min="0" max="0" value="0" aria-label="Position in time">
+      <div class="bk-scale"><span class="bk-m-a"></span><span>Click the strip or drag to jump</span><span class="bk-m-b"></span></div>
+    </div>
+  </section>
+
+  <section class="bk-kpis" id="map-headline">
+    <div class="bk-card"><div class="bk-kpi-label">Trips on the map</div><div class="bk-kpi-val bk-mk-trips dash-skeleton" data-source="map_summary" data-field="trips_mapped" data-row="0">—</div><div class="bk-kpi-note"><span class="bk-mk-share" data-source="map_coverage" data-field="share" data-row="0">—</span> of all trips in the files</div></div>
+    <div class="bk-card"><div class="bk-kpi-label">Stations</div><div class="bk-kpi-val bk-mk-st dash-skeleton" data-source="map_summary" data-field="stations" data-row="0">—</div><div class="bk-kpi-note">used at some point in 2011–2012</div></div>
+    <div class="bk-card"><div class="bk-kpi-label">Busiest station, trips started</div><div class="bk-kpi-val bk-mk-top dash-skeleton" data-source="map_top_stations" data-field="starts" data-row="0">—</div><div class="bk-kpi-note bk-mk-top-n" data-source="map_top_stations" data-field="station" data-row="0">—</div></div>
+    <div class="bk-card"><div class="bk-kpi-label">Busiest route, trips</div><div class="bk-kpi-val bk-mk-rt dash-skeleton" data-source="map_top_routes" data-field="trips" data-row="0">—</div><div class="bk-kpi-note bk-mk-rt-n" data-source="map_top_routes" data-field="route" data-row="0">—</div></div>
+  </section>
+
+  <section class="bk-grid" id="map-tables">
+    <div class="bk-card" id="top-stations">
+      <h2>Busiest stations</h2>
+      <p class="bk-note">Trips started and ended at each station over the two years, and the share started by members.</p>
+      <div class="bk-tbox"><table class="bk-table bk-t-st" data-source="map_top_stations" data-row-key="station">
+        <thead><tr><th data-field="station">Station</th><th data-field="starts">Started</th><th data-field="ends">Ended</th><th data-field="member_share">Members</th></tr></thead><tbody></tbody>
+      </table></div>
+    </div>
+    <div class="bk-card" id="top-routes">
+      <h2>Busiest routes</h2>
+      <p class="bk-note">Station-to-station trips over the two years. Round trips back to the same station are left out.</p>
+      <div class="bk-tbox"><table class="bk-table bk-t-rt" data-source="map_top_routes" data-row-key="route">
+        <thead><tr><th data-field="route">Route</th><th data-field="trips">Trips</th><th data-field="member_share">Members</th></tr></thead><tbody></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <p class="bk-note bk-mfoot">About this map: these are Capital Bikeshare's public trip files, which hold slightly fewer trips than the daily totals on the Overview, because the operator removes staff trips, test-station trips and trips under 60 seconds. Station positions come from today's station feed, matched by station number. <span class="bk-mk-left" data-source="map_coverage" data-field="left_out" data-row="0">—</span> trips are left out because they used a station that has since closed and can't be placed (12th &amp; Army Navy Dr). Four other closed stations, including Dupont Circle, are placed at their named street corner and drawn as dashed rings.</p>
+</template>
+
+<script>
+(() => {
+  // ---------- calculations ----------
+  dash.calc('days', {
+    inputs: ['day'],
+    title: 'Daily rides with weather',
+    description: 'Each day’s rides, with temperature converted back to °C (temp × 41) and the weather code named.',
+    fn: (day) => day.map((r) => ({
+      dteday: r.dteday,
+      year: 2011 + Number(r.yr),
+      rides: Number(r.cnt),
+      registered: Number(r.registered),
+      casual: Number(r.casual),
+      temp_c: Math.round(Number(r.temp) * 41 * 10) / 10,
+      weather: { 1: 'Clear', 2: 'Mist or cloud', 3: 'Light rain or snow', 4: 'Heavy rain or snow' }[r.weathersit],
+    })),
+  });
+
+  dash.calc('monthly', {
+    inputs: ['days'],
+    title: 'Monthly averages',
+    description: 'Average rides per day for each month, with rider split and average temperature.',
+    fn: (days) => {
+      const m = {};
+      days.forEach((d) => { const k = d.dteday.slice(0, 7); (m[k] = m[k] || []).push(d); });
+      const avg = (a, f) => a.reduce((s, d) => s + d[f], 0) / a.length;
+      return Object.keys(m).sort().map((ym) => ({
+        ym, year: Number(ym.slice(0, 4)), month: Number(ym.slice(5, 7)),
+        avg: Math.round(avg(m[ym], 'rides')),
+        registered: Math.round(avg(m[ym], 'registered')),
+        casual: Math.round(avg(m[ym], 'casual')),
+        temp_c: Math.round(avg(m[ym], 'temp_c') * 10) / 10,
+      }));
+    },
+  });
+
+  dash.calc('yearly', {
+    inputs: ['days'],
+    title: 'Yearly totals',
+    description: 'Total rides and average rides per day for each year.',
+    fn: (days) => [2011, 2012].map((year) => {
+      const a = days.filter((d) => d.year === year);
+      const sum = (f) => a.reduce((s, d) => s + d[f], 0);
+      return {
+        year, total: sum('rides'), avg: Math.round(sum('rides') / a.length),
+        registered: Math.round(sum('registered') / a.length), casual: Math.round(sum('casual') / a.length),
+        temp_c: Math.round(sum('temp_c') / a.length * 10) / 10,
+      };
+    }),
+  });
+
+  dash.calc('kpi', {
+    inputs: ['days', 'yearly'],
+    title: 'Headline figures',
+    description: 'Total rides, growth from 2011 to 2012, registered share, and the busiest and quietest days.',
+    fn: (days, yearly) => {
+      const total = days.reduce((s, d) => s + d.rides, 0);
+      const reg = days.reduce((s, d) => s + d.registered, 0);
+      const best = days.reduce((a, d) => (d.rides > a.rides ? d : a));
+      const worst = days.reduce((a, d) => (d.rides < a.rides ? d : a));
+      return [{
+        total, growth: yearly[1].total / yearly[0].total - 1, registered_share: reg / total,
+        best_rides: best.rides, best_day: best.dteday, worst_rides: worst.rides, worst_day: worst.dteday,
+      }];
+    },
+  });
+
+  dash.calc('month_growth', {
+    inputs: ['monthly'],
+    title: '2012 vs 2011 by month',
+    description: 'How many times more rides per day each month of 2012 had than the same month of 2011.',
+    fn: (monthly) => monthly.filter((m) => m.year === 2012).map((m) => {
+      const prev = monthly.find((p) => p.year === 2011 && p.month === m.month);
+      return { month: m.month, ratio: Math.round((m.avg / prev.avg) * 10) / 10 };
+    }),
+  });
+
+  dash.calc('temp_bands', {
+    inputs: ['days'],
+    title: 'Rides by temperature band',
+    description: 'Average rides per day in 2°C temperature bands, keeping bands with at least 20 days.',
+    fn: (days) => {
+      const b = {};
+      days.forEach((d) => { const k = Math.floor(d.temp_c / 2) * 2; (b[k] = b[k] || []).push(d.rides); });
+      return Object.keys(b).map(Number).sort((x, y) => x - y).filter((k) => b[k].length >= 20)
+        .map((k) => ({ band: k + '–' + (k + 2) + '°C', from_c: k, avg: Math.round(b[k].reduce((s, v) => s + v, 0) / b[k].length), days: b[k].length }));
+    },
+  });
+
+  dash.calc('hourly', {
+    inputs: ['hour'],
+    title: 'Rides by hour of day',
+    description: 'Average rides in each hour, for working days and for weekends or holidays.',
+    fn: (hour) => {
+      const acc = {};
+      hour.forEach((r) => {
+        const k = (Number(r.workingday) === 1 ? 'Working day' : 'Weekend or holiday') + '|' + r.hr;
+        (acc[k] = acc[k] || [0, 0]); acc[k][0] += Number(r.cnt); acc[k][1] += 1;
+      });
+      return Object.keys(acc).map((k) => ({ day_type: k.split('|')[0], hr: Number(k.split('|')[1]), avg: Math.round(acc[k][0] / acc[k][1]) }))
+        .sort((a, b) => a.day_type.localeCompare(b.day_type) || a.hr - b.hr);
+    },
+  });
+
+  dash.calc('weekday', {
+    inputs: ['day'],
+    title: 'Rides by day of week',
+    description: 'Average registered and casual rides for each day of the week.',
+    fn: (day) => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((name, i) => {
+      const a = day.filter((r) => Number(r.weekday) === i);
+      return {
+        weekday: name,
+        registered: Math.round(a.reduce((s, r) => s + Number(r.registered), 0) / a.length),
+        casual: Math.round(a.reduce((s, r) => s + Number(r.casual), 0) / a.length),
+      };
+    }),
+  });
+
+  dash.calc('weather', {
+    inputs: ['days'],
+    title: 'Rides by weather',
+    description: 'Average rides per day under each weather type, and how many days had it.',
+    fn: (days) => ['Clear', 'Mist or cloud', 'Light rain or snow'].map((weather) => {
+      const a = days.filter((d) => d.weather === weather);
+      return { weather, avg: Math.round(a.reduce((s, d) => s + d.rides, 0) / a.length), days: a.length };
+    }),
+  });
+
+  // ---------- helpers ----------
+  const root = document.querySelector('.bk');
+  const $ = (s) => root.querySelector(s);
+  const fmt = d3.format(',');
+  const pct = d3.format('.1%');
+  const compact = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 2 });
+  const parse = d3.utcParse('%Y-%m-%d');
+  const dayFmt = d3.utcFormat('%a %-d %b %Y');
+  const monFmt = d3.utcFormat('%B %Y');
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const C = () => ({ a: dash.colors[0], b: dash.colors[1], muted: 'var(--cds-chart-muted)' });
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  root.querySelectorAll('.bk-sw-a').forEach((e) => (e.style.background = dash.colors[0]));
+  root.querySelectorAll('.bk-sw-b').forEach((e) => (e.style.background = dash.colors[1]));
+
+  const setText = (el, v) => { if (el) el.textContent = v; };
+  const unskel = (el) => el && el.classList.remove('dash-skeleton');
+
+  function tipFor(box) {
+    let t = box.querySelector('.bk-tip');
+    if (!t) { t = document.createElement('div'); t.className = 'bk-tip'; box.appendChild(t); }
+    return {
+      show(evt, head, rows) {
+        t.replaceChildren();
+        const h = document.createElement('div'); h.className = 'bk-tip-h'; h.textContent = head; t.appendChild(h);
+        rows.forEach((r) => {
+          const row = document.createElement('div'); row.className = 'bk-tip-row';
+          if (r.color) { const s = document.createElement('i'); s.className = 'bk-sw'; s.style.background = r.color; row.appendChild(s); }
+          const n = document.createElement('span'); n.textContent = (r.name ? r.name + ': ' : '') + r.value; row.appendChild(n);
+          t.appendChild(row);
+        });
+        t.style.display = 'block';
+        const b = box.getBoundingClientRect();
+        let x = evt.clientX - b.left + 12, y = evt.clientY - b.top - 10;
+        if (x + t.offsetWidth > b.width) x = evt.clientX - b.left - t.offsetWidth - 12;
+        if (x < 0) x = 0;
+        if (y + t.offsetHeight > b.height) y = b.height - t.offsetHeight;
+        t.style.left = x + 'px'; t.style.top = Math.max(0, y) + 'px';
+      },
+      hide() { t.style.display = 'none'; },
+    };
+  }
+
+  function failBox(box) {
+    box.replaceChildren();
+    const d = document.createElement('div'); d.className = 'bk-fail';
+    d.appendChild(document.createElement('i'));
+    const s = document.createElement('span'); s.textContent = 'Failed to load'; d.appendChild(s);
+    box.appendChild(d);
+  }
+
+  function measure(svg, texts) {
+    const t = svg.append('text').attr('class', 'bk-tick').style('font-size', 'var(--cds-font-size-caption)');
+    let w = 0;
+    texts.forEach((s) => { t.text(s); w = Math.max(w, t.node().getComputedTextLength()); });
+    t.remove();
+    return w;
+  }
+
+  function frame(box, height) {
+    const W = Math.max(280, box.clientWidth);
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${height}`).attr('height', height);
+    return { svg, W, H: height };
+  }
+
+  function yAxis(svg, y, left, W, ticks) {
+    const g = svg.append('g').attr('class', 'bk-tick').attr('transform', `translate(${left},0)`)
+      .call(d3.axisLeft(y).ticks(ticks).tickSize(-(W - left)).tickFormat((v) => compact.format(v)));
+    g.attr('font-size', null).attr('font-family', null);
+    g.select('.domain').remove();
+    g.selectAll('line').attr('stroke', 'var(--cds-chart-grid)');
+    g.selectAll('text').attr('x', -6);
+  }
+
+  function xAxisBand(svg, x, H, bottom, labels) {
+    const g = svg.append('g').attr('class', 'bk-tick').attr('transform', `translate(0,${H - bottom})`)
+      .call(d3.axisBottom(x).tickSize(0).tickFormat(labels));
+    g.attr('font-size', null).attr('font-family', null);
+    g.select('.domain').attr('stroke', 'var(--cds-chart-axis)');
+    g.selectAll('text').attr('dy', '1.2em');
+  }
+
+  // ---------- static charts ----------
+  function drawMonthly() {
+    const box = $('.bk-c-month'); const r = dash.data('monthly');
+    box.replaceChildren();
+    if (r.status === 'error') { unskel(box); return failBox(box); }
+    if (r.status !== 'ok') return;
+    unskel(box);
+    const rows = r.data; const c = C();
+    const { svg, W, H } = frame(box, 250);
+    const y = d3.scaleLinear([0, d3.max(rows, (d) => d.avg) * 1.08], [H - 28, 8]).nice();
+    const left = measure(svg, y.ticks(5).map((v) => compact.format(v))) + 10;
+    const x = d3.scaleBand(d3.range(1, 13), [left, W - 4]).padding(0.22);
+    const xi = d3.scaleBand([2011, 2012], [0, x.bandwidth()]).padding(0.08);
+    yAxis(svg, y, left, W, 5);
+    xAxisBand(svg, x, H, 28, (m) => (W < 420 ? MON[m - 1][0] : MON[m - 1]));
+    const tip = tipFor(box);
+    svg.append('g').selectAll('rect').data(rows).join('rect')
+      .attr('x', (d) => x(d.month) + xi(d.year)).attr('width', xi.bandwidth())
+      .attr('y', (d) => y(d.avg)).attr('height', (d) => y(0) - y(d.avg)).attr('rx', 3)
+      .attr('fill', (d) => (d.year === 2012 ? c.a : c.muted))
+      .on('mousemove', (e, d) => {
+        const other = rows.find((o) => o.month === d.month && o.year !== d.year);
+        tip.show(e, MON[d.month - 1], [d, other].filter(Boolean).sort((a, b) => a.year - b.year)
+          .map((o) => ({ color: o.year === 2012 ? c.a : 'var(--cds-chart-muted)', name: String(o.year), value: fmt(o.avg) + ' / day' })));
+      })
+      .on('mouseleave', () => tip.hide());
+    // annotation: the month where 2012 pulled furthest ahead
+    const mg = dash.data('month_growth');
+    if (mg.status === 'ok' && mg.data.length) {
+      const top = mg.data.reduce((a, d) => (d.ratio > a.ratio ? d : a));
+      const bar = rows.find((d) => d.year === 2012 && d.month === top.month);
+      const bx = x(top.month) + xi(2012) + xi.bandwidth() / 2, by = y(bar.avg);
+      const lab = svg.append('text').attr('class', 'bk-ann').attr('y', by - 22).text(top.ratio + '× 2011');
+      const lw = lab.node().getComputedTextLength();
+      lab.attr('x', Math.max(left, Math.min(W - lw - 2, bx - lw / 2)));
+      svg.append('text').attr('class', 'bk-ann-m').attr('y', by - 8).text('biggest jump')
+        .attr('x', function () { const w = this.getComputedTextLength(); return Math.max(left, Math.min(W - w - 2, bx - w / 2)); });
+    }
+  }
+
+  function drawHourly() {
+    const box = $('.bk-c-hour'); const r = dash.data('hourly');
+    box.replaceChildren();
+    if (r.status === 'error') { unskel(box); return failBox(box); }
+    if (r.status !== 'ok') return;
+    unskel(box);
+    const c = C();
+    const series = [['Working day', c.a], ['Weekend or holiday', c.b]].map(([k, col]) => ({ k, col, rows: r.data.filter((d) => d.day_type === k) }));
+    const { svg, W, H } = frame(box, 250);
+    const y = d3.scaleLinear([0, d3.max(r.data, (d) => d.avg) * 1.08], [H - 28, 8]).nice();
+    const left = measure(svg, y.ticks(5).map((v) => compact.format(v))) + 10;
+    const x = d3.scaleLinear([0, 23], [left + 4, W - 8]);
+    yAxis(svg, y, left, W, 5);
+    const gx = svg.append('g').attr('class', 'bk-tick').attr('transform', `translate(0,${H - 28})`)
+      .call(d3.axisBottom(x).tickValues(W < 420 ? [0, 6, 12, 18, 23] : [0, 3, 6, 9, 12, 15, 18, 21]).tickSize(0)
+        .tickFormat((h) => (h === 0 ? '12am' : h < 12 ? h + 'am' : h === 12 ? '12pm' : (h - 12) + 'pm')));
+    gx.attr('font-size', null).attr('font-family', null);
+    gx.select('.domain').attr('stroke', 'var(--cds-chart-axis)');
+    gx.selectAll('text').attr('dy', '1.2em');
+    const line = d3.line().x((d) => x(d.hr)).y((d) => y(d.avg));
+    series.forEach((s) => svg.append('path').datum(s.rows).attr('d', line).attr('fill', 'none')
+      .attr('stroke', s.col).attr('stroke-width', 2).attr('stroke-linejoin', 'round').attr('stroke-linecap', 'round'));
+    // annotations: the two commuter peaks
+    const work = series[0].rows;
+    if (work.length) {
+      const hrLab = (h) => (h === 0 ? '12am' : h < 12 ? h + 'am' : h === 12 ? '12pm' : (h - 12) + 'pm');
+      [work.filter((d) => d.hr < 12), work.filter((d) => d.hr >= 12)].forEach((half, i) => {
+        const p = half.reduce((a, d) => (d.avg > a.avg ? d : a));
+        svg.append('circle').attr('cx', x(p.hr)).attr('cy', y(p.avg)).attr('r', 3.5).attr('fill', c.a);
+        const t = svg.append('text').attr('class', 'bk-ann').attr('y', y(p.avg) - 8).text(hrLab(p.hr) + (i ? ' ride home · ' : ' commute · ') + fmt(p.avg));
+        const w = t.node().getComputedTextLength();
+        t.attr('x', i ? Math.min(W - w - 2, x(p.hr) + 8) : Math.max(left + 2, x(p.hr) - w - 8));
+      });
+    }
+    const rule = svg.append('line').attr('y1', 8).attr('y2', H - 28).attr('stroke', 'var(--cds-chart-reference)').style('display', 'none');
+    const dots = series.map((s) => svg.append('circle').attr('r', 4).attr('fill', s.col).style('display', 'none'));
+    const tip = tipFor(box);
+    svg.append('rect').attr('x', left).attr('y', 0).attr('width', W - left).attr('height', H - 28).attr('fill', 'transparent')
+      .on('mousemove', (e) => {
+        const [mx] = d3.pointer(e); const h = Math.max(0, Math.min(23, Math.round(x.invert(mx))));
+        rule.attr('x1', x(h)).attr('x2', x(h)).style('display', null);
+        series.forEach((s, i) => { const p = s.rows.find((d) => d.hr === h); if (p) dots[i].attr('cx', x(h)).attr('cy', y(p.avg)).style('display', null); });
+        const lab = h === 0 ? '12am' : h < 12 ? h + 'am' : h === 12 ? '12pm' : (h - 12) + 'pm';
+        tip.show(e, lab, series.map((s) => ({ color: s.col, name: s.k, value: fmt((s.rows.find((d) => d.hr === h) || {}).avg) })));
+      })
+      .on('mouseleave', () => { tip.hide(); rule.style('display', 'none'); dots.forEach((d) => d.style('display', 'none')); });
+  }
+
+  function drawTemp() {
+    const box = $('.bk-c-temp'); const r = dash.data('days');
+    box.replaceChildren();
+    if (r.status === 'error') { unskel(box); return failBox(box); }
+    if (r.status !== 'ok') return;
+    unskel(box);
+    const c = C(); const rows = r.data;
+    const { svg, W, H } = frame(box, 250);
+    const y = d3.scaleLinear([0, d3.max(rows, (d) => d.rides) * 1.22], [H - 28, 8]).nice();
+    const left = measure(svg, y.ticks(5).map((v) => compact.format(v))) + 10;
+    const x = d3.scaleLinear(d3.extent(rows, (d) => d.temp_c), [left + 6, W - 8]).nice();
+    yAxis(svg, y, left, W, 5);
+    const gx = svg.append('g').attr('class', 'bk-tick').attr('transform', `translate(0,${H - 28})`)
+      .call(d3.axisBottom(x).ticks(W < 420 ? 4 : 7).tickSize(0).tickFormat((v) => v + '°C'));
+    gx.attr('font-size', null).attr('font-family', null);
+    gx.select('.domain').attr('stroke', 'var(--cds-chart-axis)');
+    gx.selectAll('text').attr('dy', '1.2em');
+    const tip = tipFor(box);
+    svg.append('g').selectAll('circle').data([...rows].sort((a, b) => a.year - b.year)).join('circle')
+      .attr('cx', (d) => x(d.temp_c)).attr('cy', (d) => y(d.rides)).attr('r', 3)
+      .attr('fill', (d) => (d.year === 2012 ? c.a : c.muted)).attr('fill-opacity', 0.75)
+      .on('mousemove', (e, d) => tip.show(e, dayFmt(parse(d.dteday)), [
+        { name: 'Rides', value: fmt(d.rides) }, { name: 'Temperature', value: d.temp_c + '°C' }, { name: 'Weather', value: d.weather }]))
+      .on('mouseleave', () => tip.hide());
+    // annotation: average line by 2°C band, with its peak labelled
+    const tb = dash.data('temp_bands');
+    if (tb.status === 'ok' && tb.data.length) {
+      const pts = tb.data.map((d) => ({ ...d, mid: d.from_c + 1 }));
+      svg.append('path').datum(pts).attr('fill', 'none').attr('stroke', 'var(--color-fg)').attr('stroke-width', 2)
+        .attr('stroke-linejoin', 'round').attr('stroke-linecap', 'round').attr('pointer-events', 'none')
+        .attr('d', d3.line().x((d) => x(d.mid)).y((d) => y(d.avg)));
+      const pk = pts.reduce((a, d) => (d.avg > a.avg ? d : a));
+      svg.append('circle').attr('cx', x(pk.mid)).attr('cy', y(pk.avg)).attr('r', 4).attr('fill', 'var(--color-fg)').attr('pointer-events', 'none');
+      const t1 = svg.append('text').attr('class', 'bk-ann').attr('pointer-events', 'none').text('Peak at ' + pk.band);
+      const t2 = svg.append('text').attr('class', 'bk-ann-m').attr('pointer-events', 'none').text(fmt(pk.avg) + ' rides a day');
+      const w = Math.max(t1.node().getComputedTextLength(), t2.node().getComputedTextLength());
+      const tx = Math.max(left + 4, Math.min(W - w - 4, x(pk.mid) - w / 2));
+      t1.attr('x', tx).attr('y', 22); t2.attr('x', tx).attr('y', 36);
+      svg.append('line').attr('x1', x(pk.mid)).attr('x2', x(pk.mid)).attr('y1', 41).attr('y2', y(pk.avg) - 6)
+        .attr('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '3 3').attr('pointer-events', 'none');
+    }
+  }
+
+  function drawWeekday() {
+    const box = $('.bk-c-week'); const r = dash.data('weekday');
+    box.replaceChildren();
+    if (r.status === 'error') { unskel(box); return failBox(box); }
+    if (r.status !== 'ok') return;
+    unskel(box);
+    const c = C(); const rows = r.data;
+    const { svg, W, H } = frame(box, 250);
+    const y = d3.scaleLinear([0, d3.max(rows, (d) => d.registered + d.casual) * 1.08], [H - 28, 8]).nice();
+    const left = measure(svg, y.ticks(5).map((v) => compact.format(v))) + 10;
+    const x = d3.scaleBand(rows.map((d) => d.weekday), [left, W - 4]).padding(0.3);
+    yAxis(svg, y, left, W, 5);
+    xAxisBand(svg, x, H, 28, (d) => d);
+    const tip = tipFor(box);
+    const g = svg.append('g').selectAll('g').data(rows).join('g');
+    g.append('rect').attr('x', (d) => x(d.weekday)).attr('width', x.bandwidth())
+      .attr('y', (d) => y(d.registered)).attr('height', (d) => y(0) - y(d.registered)).attr('fill', c.a);
+    g.append('rect').attr('x', (d) => x(d.weekday)).attr('width', x.bandwidth())
+      .attr('y', (d) => y(d.registered + d.casual)).attr('height', (d) => y(d.registered) - y(d.registered + d.casual)).attr('fill', c.b).attr('rx', 3);
+    g.on('mousemove', (e, d) => tip.show(e, d.weekday, [
+      { color: c.a, name: 'Registered', value: fmt(d.registered) }, { color: c.b, name: 'Casual', value: fmt(d.casual) }]))
+      .on('mouseleave', () => tip.hide());
+  }
+
+  function drawWeather() {
+    const box = $('.bk-c-wx'); const r = dash.data('weather');
+    box.replaceChildren();
+    if (r.status === 'error') { unskel(box); return failBox(box); }
+    if (r.status !== 'ok') return;
+    unskel(box);
+    const c = C(); const rows = r.data;
+    const { svg, W, H } = frame(box, 170);
+    const labels = rows.map((d) => d.weather);
+    const left = measure(svg, labels) + 12;
+    const vals = rows.map((d) => fmt(d.avg) + ' / day');
+    const right = measure(svg, vals) + 14;
+    const x = d3.scaleLinear([0, d3.max(rows, (d) => d.avg)], [left, W - right]);
+    const y = d3.scaleBand(labels, [6, H - 6]).padding(0.35);
+    const tip = tipFor(box);
+    const g = svg.append('g').selectAll('g').data(rows).join('g');
+    g.append('text').attr('class', 'bk-tick').attr('x', left - 8).attr('y', (d) => y(d.weather) + y.bandwidth() / 2).attr('dy', '0.35em')
+      .attr('text-anchor', 'end').style('fill', 'var(--color-fg)').style('font-size', 'var(--cds-font-size-caption)').text((d) => d.weather);
+    g.append('rect').attr('x', left).attr('y', (d) => y(d.weather)).attr('height', Math.min(32, y.bandwidth()))
+      .attr('width', (d) => x(d.avg) - left).attr('rx', 4)
+      .attr('fill', (d) => (d.weather === 'Light rain or snow' ? 'var(--cds-chart-status-critical)' : d.weather === 'Clear' ? c.a : c.muted));
+    g.append('text').attr('x', (d) => x(d.avg) + 6).attr('y', (d) => y(d.weather) + y.bandwidth() / 2).attr('dy', '0.35em')
+      .style('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)').style('font-variant-numeric', 'tabular-nums')
+      .text((d) => fmt(d.avg) + ' / day');
+    g.on('mousemove', (e, d) => tip.show(e, d.weather, [{ name: 'Average', value: fmt(d.avg) + ' rides a day' }, { name: 'Days', value: fmt(d.days) }]))
+      .on('mouseleave', () => tip.hide());
+  }
+
+  function drawKpis() {
+    const k = dash.data('kpi'); const y = dash.data('yearly');
+    root.querySelectorAll('[data-source="kpi"]').forEach((el) => {
+      if (k.status !== 'ok') { if (k.status === 'error') { unskel(el); el.textContent = '—'; } return; }
+      unskel(el);
+      const row = k.data[0]; const f = el.dataset.field;
+      el.textContent = f === 'growth' ? (el.closest('.bk-take') ? pct(row.growth) : '+' + pct(row.growth)) : f === 'registered_share' ? pct(row.registered_share)
+        : f === 'total' ? (el.classList.contains('bk-kpi-val') ? compact.format(row.total) : fmt(row.total)) : fmt(row[f]);
+    });
+    if (k.status === 'ok') {
+      setText($('.bk-best-d'), dayFmt(parse(k.data[0].best_day)));
+      setText($('.bk-worst-d'), dayFmt(parse(k.data[0].worst_day)) + ' · Hurricane Sandy');
+    }
+    const el = root.querySelector('[data-source="yearly"][data-where="year=2012"]');
+    if (y.status === 'ok') { unskel(el); el.textContent = compact.format(y.data.find((d) => d.year === 2012).total); }
+  }
+
+  // ---------- the bike road ----------
+  const S = { mode: 'day', idx: 0, playing: false, acc: 0, lastT: 0, bikes: [], target: 0, regShare: 0.8, W: 0, H: 300, built: false, dashOff: 0 };
+  const STEP = { day: 130, month: 1500, year: 3800 };
+  const PER_BIKE = 200;
+  const MAX_BIKES = 60;
+  const LANES = 5;
+
+  function frames() {
+    const key = S.mode === 'day' ? 'days' : S.mode === 'month' ? 'monthly' : 'yearly';
+    const r = dash.data(key);
+    if (r.status !== 'ok') return null;
+    return r.data.map((d) => S.mode === 'day'
+      ? { key: d.dteday, src: 'days', where: 'dteday=' + d.dteday, field: 'rides', when: dayFmt(parse(d.dteday)), rides: d.rides, reg: d.registered, cas: d.casual, temp: d.temp_c, wx: d.weather, l: 'rides that day', yr: d.year }
+      : S.mode === 'month'
+        ? { key: d.ym, src: 'monthly', where: 'ym=' + d.ym, field: 'avg', when: monFmt(parse(d.ym + '-01')), rides: d.avg, reg: d.registered, cas: d.casual, temp: d.temp_c, wx: null, l: 'average rides a day', yr: d.year }
+        : { key: String(d.year), src: 'yearly', where: 'year=' + d.year, field: 'avg', when: String(d.year), rides: d.avg, reg: d.registered, cas: d.casual, temp: d.temp_c, wx: null, l: 'average rides a day', yr: d.year });
+  }
+
+  const stage = $('.bk-stage');
+  let svgS, gBikes, gDash, skyTint, sunG;
+
+  function buildStage() {
+    const W = Math.max(300, stage.clientWidth); const H = S.H;
+    S.W = W;
+    stage.querySelectorAll('svg').forEach((s) => s.remove());
+    svgS = d3.select(stage).insert('svg', ':first-child').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`)
+      .attr('role', 'img').attr('aria-label', 'Animated road with bikes; more bikes mean more rides');
+    const roadTop = H * 0.56;
+    skyTint = svgS.append('rect').attr('width', W).attr('height', roadTop).attr('fill', '#7fb3ff').attr('fill-opacity', 0.12);
+    // city skyline, seeded so it stays put between redraws
+    let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    const city = svgS.append('g').attr('fill', 'var(--color-border-line)');
+    for (let x = 0; x < W;) {
+      const w = 18 + rnd() * 34, h = 20 + rnd() * 70;
+      if (rnd() > 0.15) city.append('rect').attr('x', x).attr('y', roadTop - h).attr('width', w - 3).attr('height', h).attr('rx', 2);
+      x += w;
+    }
+    // a capitol-style dome for Washington D.C.
+    const cx = W * 0.72;
+    city.append('rect').attr('x', cx - 30).attr('y', roadTop - 34).attr('width', 60).attr('height', 34);
+    city.append('path').attr('d', `M${cx - 22},${roadTop - 34} A22,22 0 0 1 ${cx + 22},${roadTop - 34} Z`);
+    city.append('rect').attr('x', cx - 2).attr('y', roadTop - 66).attr('width', 4).attr('height', 12);
+    sunG = svgS.append('g');
+    svgS.append('rect').attr('y', roadTop).attr('width', W).attr('height', H - roadTop).attr('fill', 'var(--color-fg)').attr('fill-opacity', 0.07);
+    svgS.append('line').attr('x1', 0).attr('x2', W).attr('y1', roadTop).attr('y2', roadTop).attr('stroke', 'var(--cds-chart-axis)');
+    gDash = svgS.append('g');
+    for (let i = 1; i < LANES; i++) {
+      const yy = roadTop + ((H - roadTop) * i) / LANES;
+      gDash.append('line').attr('x1', -40).attr('x2', W + 40).attr('y1', yy).attr('y2', yy)
+        .attr('stroke', 'var(--color-fg-muted)').attr('stroke-opacity', 0.25).attr('stroke-dasharray', '14 18');
+    }
+    gBikes = svgS.append('g');
+    S.roadTop = roadTop;
+    // re-attach existing bikes to the new stage
+    const old = S.bikes; S.bikes = [];
+    old.forEach((b) => { if (b.active) { const nb = makeBike(b.type); nb.x = (b.x / (b.W || W)) * W; nb.lane = b.lane; nb.speed = b.speed; nb.active = true; S.bikes.push(nb); } });
+    S.bikes.forEach((b) => b.g.style('display', null));
+    S.built = true;
+  }
+
+  function makeBike(type) {
+    const g = gBikes.append('g').style('display', 'none');
+    const col = type === 'reg' ? dash.colors[0] : dash.colors[1];
+    const wheels = [-13, 13].map((cx) => {
+      const w = g.append('g').attr('transform', `translate(${cx},0)`);
+      w.append('circle').attr('r', 9).attr('fill', 'none').attr('stroke', 'var(--color-fg)').attr('stroke-width', 1.6);
+      const sp = w.append('g');
+      [0, 60, 120].forEach((a) => sp.append('line').attr('x1', -8).attr('x2', 8).attr('transform', `rotate(${a})`).attr('stroke', 'var(--color-fg-muted)').attr('stroke-width', 0.8));
+      return sp;
+    });
+    g.append('path').attr('d', 'M-13,0 L-3,-13 L10,-13 L13,0 M-3,-13 L0,0 L-13,0 M0,0 L10,-13 M10,-13 L12,-19 L15,-19 M-6,-15 L-1,-15')
+      .attr('fill', 'none').attr('stroke', 'var(--color-fg)').attr('stroke-width', 1.8).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round');
+    const rider = g.append('g').attr('stroke', col).attr('stroke-width', 3).attr('stroke-linecap', 'round').attr('fill', 'none');
+    rider.append('path').attr('d', 'M-3,-16 L4,-29 L12,-20');
+    const leg = rider.append('path');
+    g.append('circle').attr('cx', 6).attr('cy', -34).attr('r', 4.2).attr('fill', col);
+    return { g, wheels, leg, type, x: -40, lane: 0, speed: 80, angle: 0, active: false, W: S.W };
+  }
+
+  function placeBike(b) {
+    const s = 0.72 + (b.lane / (LANES - 1)) * 0.38;
+    const y = S.roadTop + ((S.H - S.roadTop) * (b.lane + 0.75)) / LANES;
+    b.g.attr('transform', `translate(${b.x},${y}) scale(${s})`);
+    b.wheels.forEach((w) => w.attr('transform', `rotate(${b.angle})`));
+    const a = (b.angle * Math.PI) / 180; const px = Math.cos(a) * 5, py = Math.sin(a) * 5;
+    b.leg.attr('d', `M-3,-16 L${(px * 0.6 + 1).toFixed(1)},${(-8 + py * 0.4).toFixed(1)} L${px.toFixed(1)},${py.toFixed(1)}`);
+  }
+
+  function spawn(stagger) {
+    let b = S.bikes.find((o) => !o.active);
+    const type = Math.random() < S.regShare ? 'reg' : 'cas';
+    if (!b || b.type !== type) { if (b) { b.g.remove(); S.bikes.splice(S.bikes.indexOf(b), 1); } b = makeBike(type); S.bikes.push(b); }
+    b.active = true; b.lane = Math.floor(Math.random() * LANES); b.speed = 70 + Math.random() * 60;
+    b.x = stagger ? Math.random() * S.W : -30 - Math.random() * 140;
+    b.g.style('display', null);
+    // keep near lanes drawn on top
+    const nodes = S.bikes.filter((o) => o.active).sort((p, q) => p.lane - q.lane);
+    nodes.forEach((o) => gBikes.node().appendChild(o.g.node()));
+  }
+
+  const WX_ICON = { 'Clear': '☀️', 'Mist or cloud': '⛅', 'Light rain or snow': '🌧️', 'Heavy rain or snow': '⛈️' };
+
+  // ---------- moments worth pausing on ----------
+  const HOLD = { day: 2600, month: 2200, year: 0 };
+  const n = (v, src, field, where, kind) => ({ v, src, field, where, kind });
+  function annotation(F, i) {
+    const f = F[i]; const prev = F[i - 1];
+    const k = dash.data('kpi'); const kp = k.status === 'ok' ? k.data[0] : null;
+    const mo = dash.data('monthly'); const M = mo.status === 'ok' ? mo.data : [];
+    const ym = (key) => M.find((m) => m.ym === key);
+    const here = (field, kind) => n(field === 'rides' || field === 'avg' ? f.rides : field === 'registered' ? f.reg : f.temp, f.src, field, f.where, kind);
+    if (S.mode === 'day') {
+      if (f.key === '2011-01-26' && prev) return { title: 'A snowstorm hits D.C.', parts: [here('rides'), ' rides, down from ', n(prev.rides, 'days', 'rides', prev.where), ' the day before.'] };
+      if (f.key === '2012-03-23' && ym('2012-03') && ym('2011-03')) return { title: 'Spring comes early in 2012', parts: [here('rides'), ' rides on a ', here('temp_c', 'temp'), ' March day. March 2012 averaged ', n(ym('2012-03').avg, 'monthly', 'avg', 'ym=2012-03'), ' a day, against ', n(ym('2011-03').avg, 'monthly', 'avg', 'ym=2011-03'), ' in March 2011.'] };
+      if (kp && f.key === kp.best_day) return { title: 'The busiest day in the data', parts: [here('rides'), ' rides, ', here('registered'), ' of them by registered members.'] };
+      if (f.key === '2012-10-29' && prev) return { title: 'Hurricane Sandy', parts: ['Only ', here('rides'), ' rides, the quietest day in two years. The day before had ', n(prev.rides, 'days', 'rides', prev.where), '.'] };
+      if (f.key === '2012-12-26') return { title: 'Snow after Christmas', parts: [here('rides'), ' rides as winter weather closes out 2012.'] };
+      return null;
+    }
+    if (S.mode === 'month') {
+      const peak = M.length ? M.reduce((a, m) => (m.avg > a.avg ? m : a)) : null;
+      if (f.key === '2011-01') return { title: 'Where it starts', parts: ['January 2011 averaged ', here('avg'), ' rides a day.'] };
+      if (f.key === '2012-03' && ym('2011-03')) return { title: 'Spring 2012 takes off', parts: [here('avg'), ' rides a day, against ', n(ym('2011-03').avg, 'monthly', 'avg', 'ym=2011-03'), ' in March 2011.'] };
+      if (peak && f.key === peak.ym) return { title: 'The peak month', parts: [f.when + ' averaged ', here('avg'), ' rides a day.'] };
+      if (f.key === '2012-10') return { title: 'The month of Hurricane Sandy', parts: ['Still ', here('avg'), ' rides a day, despite the storm on 29 October.'] };
+      return null;
+    }
+    if (f.key === '2012' && kp) return { title: 'Year two', parts: ['Total rides grew ', n(kp.growth, 'kpi', 'growth', null, 'pct'), ' on 2011.'] };
+    return null;
+  }
+
+  function renderCaption(ann) {
+    const cap = $('.bk-cap');
+    setText(cap.querySelector('.bk-cap-t'), ann.title);
+    const body = cap.querySelector('.bk-cap-b'); body.replaceChildren();
+    ann.parts.forEach((p) => {
+      if (typeof p === 'string') { body.appendChild(document.createTextNode(p)); return; }
+      const b = document.createElement('b');
+      b.textContent = p.kind === 'temp' ? p.v + '°C' : p.kind === 'pct' ? '+' + pct(p.v) : fmt(p.v);
+      b.dataset.source = p.src; b.dataset.field = p.field;
+      if (p.where) b.dataset.where = p.where; else b.dataset.row = '0';
+      body.appendChild(b);
+    });
+    cap.classList.add('on'); S.capHideAt = 0;
+  }
+  const hideCaption = () => { $('.bk-cap').classList.remove('on'); S.capHideAt = 0; };
+
+  function show(redrawOnly) {
+    const F = frames();
+    const range = $('.bk-range');
+    if (!F) return;
+    if (S.idx >= F.length) S.idx = 0;
+    const f = F[S.idx];
+    range.max = String(F.length - 1); range.value = String(S.idx);
+    setText($('.bk-when'), f.when);
+    const ridesEl = $('.bk-rides'); unskel(ridesEl);
+    ridesEl.textContent = fmt(f.rides);
+    ridesEl.dataset.source = f.src; ridesEl.dataset.field = f.field; ridesEl.dataset.where = f.where;
+    setText($('.bk-rides-l'), f.l);
+    const reg = $('.bk-reg'), cas = $('.bk-cas');
+    [[reg, 'registered', f.reg], [cas, 'casual', f.cas]].forEach(([el, field, v]) => {
+      el.textContent = fmt(v); el.dataset.source = f.src; el.dataset.field = field; el.dataset.where = f.where;
+    });
+    const t = $('.bk-wx-t'); t.textContent = f.temp + '°C';
+    t.dataset.source = f.src; t.dataset.field = 'temp_c'; t.dataset.where = f.where;
+    const wl = $('.bk-wx-l');
+    if (f.wx) { wl.textContent = f.wx; wl.dataset.source = 'days'; wl.dataset.field = 'weather'; wl.dataset.where = f.where; }
+    else { wl.textContent = 'average temperature'; delete wl.dataset.source; delete wl.dataset.field; delete wl.dataset.where; }
+    setText($('.bk-wx-icon'), f.wx ? WX_ICON[f.wx] : (f.temp > 20 ? '☀️' : f.temp > 12 ? '⛅' : '❄️'));
+    // sky warms with temperature
+    if (skyTint) {
+      const k = Math.max(0, Math.min(1, (f.temp - 2) / 28));
+      skyTint.attr('fill', d3.interpolateRgb('#7fb3ff', '#ffb347')(k)).attr('fill-opacity', f.wx === 'Light rain or snow' ? 0.2 : 0.12);
+      sunG.selectAll('*').remove();
+      if (f.wx === 'Light rain or snow' || f.wx === 'Heavy rain or snow') {
+        for (let i = 0; i < 40; i++) {
+          const x = (i * 97) % S.W, y = 10 + ((i * 53) % Math.max(20, S.roadTop - 20));
+          sunG.append('line').attr('x1', x).attr('x2', x - 4).attr('y1', y).attr('y2', y + 10).attr('stroke', '#5b8def').attr('stroke-opacity', 0.45).attr('stroke-width', 1.2);
+        }
+      }
+    }
+    const ann = annotation(F, S.idx);
+    S.annHere = !!ann;
+    if (ann) renderCaption(ann);
+    else if (S.playing && S.mode === 'day' && $('.bk-cap').classList.contains('on')) { if (!S.capHideAt) S.capHideAt = performance.now() + 1200; }
+    else hideCaption();
+    S.target = Math.min(MAX_BIKES, Math.round(f.rides / PER_BIKE));
+    S.regShare = f.rides ? f.reg / f.rides : 0.8;
+    drawTimeline(F);
+  }
+
+  function drawTimeline(F) {
+    const box = $('.bk-tl');
+    const W = Math.max(280, box.clientWidth); const H = 54;
+    let svg = d3.select(box).select('svg');
+    if (svg.empty() || +svg.attr('data-w') !== W || svg.attr('data-mode') !== S.mode) {
+      box.replaceChildren();
+      box.dataset.source = F[0].src;
+      svg = d3.select(box).append('svg').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`).attr('data-w', W).attr('data-mode', S.mode);
+      const x = d3.scaleBand(d3.range(F.length), [0, W]).paddingInner(F.length > 100 ? 0 : 0.15);
+      const y = d3.scaleLinear([0, d3.max(F, (d) => d.rides)], [H, 12]);
+      svg.append('g').selectAll('rect').data(F).join('rect').attr('class', 'bk-tlb')
+        .attr('x', (d, i) => x(i)).attr('width', Math.max(1, x.bandwidth())).attr('y', (d) => y(d.rides)).attr('height', (d) => H - y(d.rides))
+        .attr('fill', (d) => (d.yr === 2012 ? dash.colors[0] : 'var(--cds-chart-muted)')).attr('fill-opacity', 0.55);
+      // a marker over each moment with a caption
+      const bwm = W / F.length;
+      F.forEach((f, i) => { if (annotation(F, i)) svg.append('circle').attr('cx', i * bwm + bwm / 2).attr('cy', 5).attr('r', 3.5).attr('fill', 'var(--color-fg)'); });
+      svg.append('rect').attr('class', 'bk-tl-cur').attr('y', 0).attr('height', H).attr('fill', 'var(--color-fg)').attr('fill-opacity', 0.9);
+      svg.on('click', (e) => { const [mx] = d3.pointer(e); S.idx = Math.max(0, Math.min(F.length - 1, Math.floor((mx / W) * F.length))); S.acc = 0; show(); });
+      setText($('.bk-tl-a'), F[0].when); setText($('.bk-tl-b'), F[F.length - 1].when);
+    }
+    const bw = W / F.length;
+    svg.select('.bk-tl-cur').attr('x', S.idx * bw + bw / 2 - Math.max(1.5, Math.min(bw, 6)) / 2).attr('width', Math.max(3, Math.min(bw, 6)));
+  }
+
+  function tick(t) {
+    const dt = S.lastT ? Math.min(0.05, (t - S.lastT) / 1000) : 0; S.lastT = t;
+    if (S.built && !overview.hidden) {
+      if (S.playing) {
+        S.acc += dt * 1000;
+        if (S.capHideAt && t > S.capHideAt) hideCaption();
+        if (S.acc >= STEP[S.mode] + (S.annHere ? HOLD[S.mode] : 0)) { S.acc = 0; const F = frames(); if (F) { S.idx = (S.idx + 1) % F.length; show(); } }
+      }
+      const motion = reduced && !S.playing ? 0 : 1;
+      let active = S.bikes.filter((b) => b.active).length;
+      S.bikes.forEach((b) => {
+        if (!b.active) return;
+        b.x += b.speed * dt * motion; b.angle = (b.angle + b.speed * dt * 4.5 * motion) % 360;
+        if (b.x > S.W + 40) {
+          if (active > S.target) { b.active = false; b.g.style('display', 'none'); active--; }
+          else { b.x = -30 - Math.random() * 120; }
+        }
+        if (b.active) placeBike(b);
+      });
+      let guard = 0;
+      while (active < S.target && guard++ < 6) { spawn(S.bikes.length === 0 || !S.started); active++; }
+      if (active >= S.target) S.started = true;
+      S.dashOff = (S.dashOff - 60 * dt * motion) % 32;
+      gDash.selectAll('line').attr('stroke-dashoffset', S.dashOff);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // controls
+  root.querySelectorAll('.bk-seg button').forEach((btn) => btn.addEventListener('click', () => {
+    S.mode = btn.dataset.mode; S.idx = 0; S.acc = 0;
+    root.querySelectorAll('.bk-seg button').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+    show();
+  }));
+  const playBtn = $('.bk-play');
+  playBtn.addEventListener('click', () => { S.playing = !S.playing; playBtn.textContent = S.playing ? '❚❚ Pause' : '▶ Play'; });
+  $('.bk-range').addEventListener('input', (e) => { S.idx = Number(e.target.value); S.acc = 0; show(); });
+
+  let lastW = 0;
+  const overview = document.getElementById('overview');
+  const redrawOverview = () => {
+    drawKpis();
+    if (overview.hidden) return;
+    drawMonthly(); drawHourly(); drawTemp(); drawWeekday(); drawWeather();
+    const ok = dash.data('days').status === 'ok' && dash.data('monthly').status === 'ok' && dash.data('yearly').status === 'ok';
+    if (dash.data('days').status === 'error') { stage.querySelector('.bk-rides').textContent = 'Failed to load'; return; }
+    if (!ok) return;
+    if (!S.built || stage.clientWidth !== lastW) { lastW = stage.clientWidth; buildStage(); }
+    if (!S.autostarted) {
+      S.autostarted = true;
+      if (!reduced) { S.playing = true; playBtn.textContent = '❚❚ Pause'; }
+    }
+    show();
+  };
+  dash.onData(redrawOverview);
+  window.bkRedrawOverview = () => { lastW = -1; redrawOverview(); };
+  requestAnimationFrame(tick);
+
+  // ---------- pages ----------
+  const tabs = [...root.querySelectorAll('.bk-tab')];
+  let mapReady = false;
+  function openPage(id) {
+    tabs.forEach((t) => t.setAttribute('aria-selected', String(t.dataset.page === id)));
+    root.querySelectorAll('.bk-page').forEach((pg) => { pg.hidden = pg.id !== id; });
+    if (id === 'map') {
+      if (!mapReady && window.bkMapInit) {
+        mapReady = true;
+        const pg = document.getElementById('map');
+        pg.appendChild(document.getElementById('bk-tpl-map').content.cloneNode(true));
+        window.bkMapInit(pg);
+      } else if (window.bkMapRedraw) window.bkMapRedraw();
+    } else if (id === 'overview') window.bkRedrawOverview();
+    else if (window.bkRedrawReport) window.bkRedrawReport();
+    dash.setLink(id);
+  }
+  window.bkOpenPage = openPage;
+  tabs.forEach((t) => t.addEventListener('click', () => openPage(t.dataset.page)));
+  { const h = location.hash.slice(1); if (h === 'map' || h === 'overview') setTimeout(() => openPage(h), 0); }
+})();
+</script>
+<script src="map.js"></script>
+<script src="report.js"></script>

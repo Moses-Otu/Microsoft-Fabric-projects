@@ -1,0 +1,4 @@
+# raw and exported data stay out of git; notebook 01 downloads the raw files
+data/
+*.zip
+__pycache__/
